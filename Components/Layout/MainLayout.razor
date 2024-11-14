@@ -1,0 +1,125 @@
+﻿@inherits LayoutComponentBase
+
+@page "/landing"
+@using System.Net.Http.Json
+@using System.Text.Json
+@inject HttpClient Http
+
+<div class="page">
+    <main>
+        <article class="content px-4">
+            <div class="">
+                <div class="row">
+                    <label class="page-title">Landing Page</label>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="row searchbox">
+                            <div class="row">
+                                <label class="label-text">User Prompt</label>
+                            </div>
+                            <div class="row">
+                                <div class="input-group">
+                                    <input type="search" class="form-control" @bind="UserInput" placeholder="User will provide prompt/query" />
+                                    <button type="button" class="btn btn-primary" @onclick="SearchAsync" data-mdb-ripple-init>Search</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="label-text">Response</label>
+                            <div>
+                                <div class="message-box">
+                                    @ChatResponse
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="label-text">Chat History</label>
+                            <div>
+                                <div class="message-box">
+                                    @ChatHistory
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="row">
+                            <p class="label-text">Available Plugins</p>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-1">
+                                <input type="radio" class="radio-btn" name="" />
+                            </div>
+                            <div class="col-lg-11">
+                                <p class="paragraph-text">Web Search</p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-1">
+                                <input type="radio" class="radio-btn" name="" />
+                            </div>
+                            <div class="col-lg-11">
+                                <p class="paragraph-text">Sharepoint Connect</p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-1">
+                                <input type="radio" class="radio-btn" name="" />
+                            </div>
+                            <div class="col-lg-11">
+                                <p class="paragraph-text">Dynamic Connect</p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <label class="label-text">Semantic Index History</label>
+                            <div>
+                                <div class="semantic-history-box">
+                                    @SemanticResponse
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </main>
+</div>
+
+@code {
+    private string UserInput { get; set; } = string.Empty;
+    private string ChatResponse { get; set; } = string.Empty;
+    private string ChatHistory { get; set; } = string.Empty;
+    private string SemanticResponse { get; set; } = string.Empty;
+
+    private async Task SearchAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(UserInput))
+        {
+            try
+            {
+                // Call the Web API, assuming the endpoint is /api/chat
+                var response = await Http.GetFromJsonAsync<JsonElement>($"http://localhost:5079/Chat?userQuery={Uri.EscapeDataString(UserInput)}");
+
+                // Assuming response has "chatResponse", "chatHistory", and "semanticData" keys
+                if (response.TryGetProperty("chatResponse", out var chatResponseJson))
+                {
+                    ChatResponse = chatResponseJson.GetString() ?? "No response";
+                }
+
+                if (response.TryGetProperty("chatHistory", out var chatHistoryJson))
+                {
+                    ChatHistory = chatHistoryJson.GetString() ?? "No history";
+                }
+
+                if (response.TryGetProperty("semanticData", out var semanticDataJson))
+                {
+                    SemanticResponse = semanticDataJson.GetString() ?? "No semantic data";
+                }
+            }
+            catch (Exception ex)
+            {
+                ChatResponse = $"Error: {ex.Message}";
+            }
+        }
+    }
+}

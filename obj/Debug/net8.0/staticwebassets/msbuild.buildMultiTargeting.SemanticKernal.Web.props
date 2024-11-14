@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\SemanticKernal.Web.props" />
+</Project>
